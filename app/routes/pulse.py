@@ -12,5 +12,7 @@ async def pulse(request: Request):
     pulse_data = await api.pulse()
     health = await api.health()
     return request.app.state.templates.TemplateResponse(
-        request, "pulse.html", {"pulse": pulse_data, "health": health, "active": "pulse"}
+        request,
+        "pulse.html",
+        {"pulse": pulse_data, "health": health, "active": "pulse"},
     )
