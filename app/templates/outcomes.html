@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Outcomes — Lumin India Ops{% endblock %}
+{% block content %}
+<h1>Signal outcomes <span class="muted">({{ outcomes | length }})</span></h1>
+
+{% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+<form class="filters" method="get" action="/outcomes">
+  <label>Date
+    <input type="date" name="date" value="{{ date_filter }}">
+  </label>
+  <button type="submit">Filter</button>
+</form>
+
+{% if outcomes %}
+<div class="grid-auto" style="margin-bottom:1rem">
+  <div class="stat-card">
+    <div class="stat-label">TP1 Hit</div>
+    <div class="stat-value pos">{{ tp1_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">SL Hit</div>
+    <div class="stat-value neg">{{ sl_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Expired</div>
+    <div class="stat-value muted">{{ expired_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Win rate</div>
+    <div class="stat-value {% if win_rate >= 50 %}pos{% else %}neg{% endif %}">{{ win_rate }}%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Net points</div>
+    <div class="stat-value {% if net_points >= 0 %}pos{% else %}neg{% endif %}">
+      {{ '+' if net_points >= 0 else '' }}{{ '%.1f' % net_points }}
+    </div>
+  </div>
+</div>
+
+<div class="table-wrap">
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Resolved</th>
+      <th>Base</th>
+      <th>Dir</th>
+      <th>Setup</th>
+      <th>Tier</th>
+      <th>Outcome</th>
+      <th>Entry</th>
+      <th>Exit</th>
+      <th>Points</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for o in outcomes %}
+    <tr>
+      <td class="mono small">{{ o.resolved_at[:16] if o.resolved_at else '—' }}</td>
+      <td><strong>{{ o.base | default('—') }}</strong></td>
+      <td>
+        {% if o.direction %}
+        <span class="badge badge-{{ o.direction | lower }}">{{ o.direction }}</span>
+        {% endif %}
+      </td>
+      <td class="mono small">{{ o.setup_class | default('—') }}</td>
+      <td>
+        {% if o.tier %}
+        <span class="badge badge-{{ o.tier | replace('+','plus') | lower }}">{{ o.tier }}</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if o.outcome == 'TP1_HIT' %}
+        <span class="badge badge-tp1">TP1</span>
+        {% elif o.outcome == 'SL_HIT' %}
+        <span class="badge badge-sl">SL</span>
+        {% else %}
+        <span class="badge badge-exp">EXP</span>
+        {% endif %}
+      </td>
+      <td class="mono">{{ '%.1f' % o.entry if o.entry else '—' }}</td>
+      <td class="mono">{{ '%.1f' % o.exit_price }}</td>
+      <td class="mono {% if o.points >= 0 %}pos{% else %}neg{% endif %}">
+        {{ '+' if o.points >= 0 else '' }}{{ '%.1f' % o.points }}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="card muted">No outcomes found. Outcomes are written when a signal's TP1 or SL is touched, or at session close (EXPIRED).</div>
+{% endif %}
+{% endblock %}

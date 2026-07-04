@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Signals — Lumin India Ops{% endblock %}
+{% block content %}
+<h1>Signals <span class="muted">({{ signals | length }})</span></h1>
+
+{% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+<form class="filters" method="get" action="/signals">
+  <label>Date
+    <input type="date" name="date" value="{{ date_filter }}">
+  </label>
+  <label>Tier
+    <select name="tier">
+      <option value="">All</option>
+      <option value="A+" {% if tier_filter == 'A+' %}selected{% endif %}>A+</option>
+      <option value="B" {% if tier_filter == 'B' %}selected{% endif %}>B</option>
+    </select>
+  </label>
+  <button type="submit">Filter</button>
+</form>
+
+{% if signals %}
+<div class="table-wrap">
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Base</th>
+      <th>Dir</th>
+      <th>Setup</th>
+      <th>Tier</th>
+      <th>Entry</th>
+      <th>SL</th>
+      <th>TP1</th>
+      <th>RR</th>
+      <th>Conf</th>
+      <th>Expiry</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in signals %}
+    <tr>
+      <td class="mono">{{ s.created_at[:16] if s.created_at else '—' }}</td>
+      <td><strong>{{ s.base }}</strong></td>
+      <td><span class="badge badge-{{ s.direction | lower }}">{{ s.direction }}</span></td>
+      <td class="mono small">{{ s.setup_class }}</td>
+      <td>
+        <span class="badge badge-{{ s.tier | replace('+','plus') | lower }}">{{ s.tier }}</span>
+      </td>
+      <td class="mono">{{ '%.1f' % s.entry }}</td>
+      <td class="mono neg">{{ '%.1f' % s.sl }}</td>
+      <td class="mono pos">{{ '%.1f' % s.tp1 }}</td>
+      <td class="mono">{{ '%.2f' % s.rr_ratio }}</td>
+      <td class="mono">{{ '%.0f' % s.confidence }}</td>
+      <td class="mono small">{{ s.expiry_date | default('—') }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="card muted">No signals found for the selected filters.</div>
+{% endif %}
+{% endblock %}
