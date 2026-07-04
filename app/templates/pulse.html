@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Pulse — Lumin India Ops{% endblock %}
+{% block content %}
+<h1>Pulse</h1>
+
+{% if pulse.error is defined %}
+<div class="error-msg">Engine unreachable: {{ pulse.error }}</div>
+{% else %}
+
+{% set state = pulse.session_state | default('UNKNOWN') %}
+<div class="grid-auto" style="margin-bottom:1rem">
+  <div class="stat-card">
+    <div class="stat-label">Session state</div>
+    <div class="stat-value
+      {% if state == 'OPEN' %}pos
+      {% elif state == 'PRE_OPEN' %}warn
+      {% else %}muted{% endif %}">{{ state }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Signals today</div>
+    <div class="stat-value">{{ pulse.signals_today | default(0) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Scan count</div>
+    <div class="stat-value">{{ pulse.scan_count | default(0) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Uptime</div>
+    <div class="stat-value mono" style="font-size:1.1rem">
+      {% set s = pulse.uptime_seconds | default(0) %}
+      {% set h = s // 3600 %}{% set m = (s % 3600) // 60 %}
+      {{ h }}h {{ m }}m
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Dev mode</div>
+    <div class="stat-value {% if pulse.dev_mode %}warn{% else %}muted{% endif %}">
+      {{ 'ON' if pulse.dev_mode else 'off' }}
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Auto execution</div>
+    <div class="stat-value {% if pulse.auto_execution %}pos{% else %}muted{% endif %}">
+      {{ 'ENABLED' if pulse.auto_execution else 'off' }}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Engine detail</h2>
+  <div class="kv"><span class="k">Allowed bases</span><span class="v mono">{{ pulse.allowed_bases | join(', ') }}</span></div>
+  <div class="kv"><span class="k">Timestamp (IST)</span><span class="v mono">{{ pulse.ts | default('—') }}</span></div>
+</div>
+
+{% if health and not health.error is defined %}
+<div class="card">
+  <h2>Health</h2>
+  <div class="kv"><span class="k">Status</span><span class="v pos">{{ health.status }}</span></div>
+  <div class="kv"><span class="k">Server time</span><span class="v mono">{{ health.ts }}</span></div>
+</div>
+{% endif %}
+
+{% endif %}
+
+<p class="muted" style="margin-top:1.5rem">
+  Last loaded: {{ pulse.ts | default('—') }} &middot;
+  <a href="/">Refresh</a>
+</p>
+{% endblock %}

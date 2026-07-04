@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Lumin India Ops{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <a href="/">Lumin India Ops</a>
+      <div class="sub">NSE F&amp;O signal engine</div>
+    </div>
+    <nav>
+      <a href="/" class="{% if active=='pulse' %}on{% endif %}">Pulse</a>
+      <a href="/signals" class="{% if active=='signals' %}on{% endif %}">Signals</a>
+      <a href="/suppressed" class="{% if active=='suppressed' %}on{% endif %}">Suppressed</a>
+      <a href="/outcomes" class="{% if active=='outcomes' %}on{% endif %}">Outcomes</a>
+      <a href="/quality" class="{% if active=='quality' %}on{% endif %}">Quality</a>
+    </nav>
+    <div class="user"><a href="/logout">Logout</a></div>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

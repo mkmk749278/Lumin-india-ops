@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Suppressed — Lumin India Ops{% endblock %}
+{% block content %}
+<h1>Gate suppressions <span class="muted">({{ suppressions | length }})</span></h1>
+
+{% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+{% if suppressions %}
+{# Gate summary — how many hits per gate #}
+{% set gate_counts = {} %}
+{% for s in suppressions %}
+  {% if s.gate_name in gate_counts %}
+    {% set _ = gate_counts.update({s.gate_name: gate_counts[s.gate_name] + 1}) %}
+  {% else %}
+    {% set _ = gate_counts.update({s.gate_name: 1}) %}
+  {% endif %}
+{% endfor %}
+
+<div class="card" style="margin-bottom:1rem">
+  <h2>Gate summary</h2>
+  <div class="grid-auto">
+    {% for gate, count in gate_counts.items() | sort(attribute=1, reverse=True) %}
+    <div class="stat-card">
+      <div class="stat-label">{{ gate }}</div>
+      <div class="stat-value" style="font-size:1.2rem">{{ count }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="table-wrap">
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Base</th>
+      <th>Setup</th>
+      <th>Dir</th>
+      <th>Gate</th>
+      <th>Reason</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in suppressions %}
+    <tr>
+      <td class="mono small">{{ s.scan_time[:16] if s.scan_time else '—' }}</td>
+      <td><strong>{{ s.base }}</strong></td>
+      <td class="mono small">{{ s.setup_class | default('—') }}</td>
+      <td>{% if s.direction %}<span class="badge badge-{{ s.direction | lower }}">{{ s.direction }}</span>{% endif %}</td>
+      <td class="mono warn">{{ s.gate_name }}</td>
+      <td class="small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis">{{ s.reason }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="card muted">No suppression records found. If the market is open and scanning, gate suppressions appear here.</div>
+{% endif %}
+{% endblock %}

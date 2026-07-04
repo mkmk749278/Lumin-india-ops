@@ -1,0 +1,13 @@
+services:
+  india-ops:
+    image: india-ops:latest
+    container_name: india-ops
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      OPS_SESSION_SECRET: ${OPS_SESSION_SECRET}
+      OPS_AUTH_TOKEN: ${OPS_AUTH_TOKEN}
+      INDIA_ENGINE_API_BASE: ${INDIA_ENGINE_API_BASE:-https://lumintrade.app}
+      INDIA_API_TOKEN: ${INDIA_API_TOKEN}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
