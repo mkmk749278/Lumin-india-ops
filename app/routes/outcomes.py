@@ -21,6 +21,10 @@ async def outcomes(
     sl = sum(1 for r in rows if r.get("outcome") == "SL_HIT")
     expired = sum(1 for r in rows if r.get("outcome") == "EXPIRED")
     net_points = sum(r.get("points", 0) for r in rows)
+    # % is the only cross-instrument-comparable measure — summing raw points
+    # across the 46-base universe just weights by price level.
+    net_pct = sum(r.get("pct", 0) for r in rows)
+    avg_pct = round(net_pct / len(rows), 2) if rows else 0
 
     return request.app.state.templates.TemplateResponse(
         request, "outcomes.html", {
@@ -30,6 +34,8 @@ async def outcomes(
             "sl_count": sl,
             "expired_count": expired,
             "net_points": net_points,
+            "net_pct": net_pct,
+            "avg_pct": avg_pct,
             "win_rate": round(tp1 / len(rows) * 100, 1) if rows else 0,
             "date_filter": date or "",
             "active": "outcomes",

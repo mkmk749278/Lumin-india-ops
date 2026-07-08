@@ -24,9 +24,9 @@
     <div class="stat-value {% if overall_win_rate >= 50 %}pos{% else %}neg{% endif %}">{{ overall_win_rate }}%</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Net points</div>
-    <div class="stat-value {% if total_points >= 0 %}pos{% else %}neg{% endif %}">
-      {{ '+' if total_points >= 0 else '' }}{{ '%.1f' % total_points }}
+    <div class="stat-label">Net P&amp;L</div>
+    <div class="stat-value {% if total_pct >= 0 %}pos{% else %}neg{% endif %}">
+      {{ '+' if total_pct >= 0 else '' }}{{ '%.2f' % total_pct }}%
     </div>
   </div>
 </div>
@@ -44,7 +44,7 @@
       <th>SL</th>
       <th>Exp</th>
       <th>Win %</th>
-      <th>Net pts</th>
+      <th>Net P&amp;L %</th>
       <th>Suppressed</th>
       <th>Top gate</th>
     </tr>
@@ -65,8 +65,8 @@
       <td class="{% if win is not none %}{% if win >= 50 %}pos{% else %}neg{% endif %}{% else %}muted{% endif %}">
         {% if win is not none %}{{ win }}%{% else %}—{% endif %}
       </td>
-      <td class="mono {% if s.total_points >= 0 %}pos{% else %}neg{% endif %}">
-        {{ '+' if s.total_points >= 0 else '' }}{{ '%.1f' % s.total_points }}
+      <td class="mono {% if (s.total_pct | default(0)) >= 0 %}pos{% else %}neg{% endif %}">
+        {% if s.hasOutcomes is defined or resolved > 0 %}{{ '+' if (s.total_pct | default(0)) >= 0 else '' }}{{ '%.2f' % (s.total_pct | default(0)) }}%{% else %}—{% endif %}
       </td>
       <td class="muted">{{ s.total_suppressed }}</td>
       <td class="mono small warn">
