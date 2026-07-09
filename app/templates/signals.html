@@ -23,6 +23,7 @@
     <select name="tier">
       <option value="">All</option>
       <option value="A+" {% if tier_filter == 'A+' %}selected{% endif %}>A+</option>
+      <option value="A" {% if tier_filter == 'A' %}selected{% endif %}>A</option>
       <option value="B" {% if tier_filter == 'B' %}selected{% endif %}>B</option>
     </select>
   </label>
