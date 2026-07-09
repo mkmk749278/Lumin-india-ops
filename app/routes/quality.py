@@ -28,6 +28,9 @@ async def quality(request: Request):
     total_tp1 = sum(r.get("tp1_count", 0) for r in rows)
     total_sl = sum(r.get("sl_count", 0) for r in rows)
     total_points = sum(r.get("total_points", 0) for r in rows)
+    # Cross-instrument-comparable P&L — summing raw points across a 46-base
+    # universe is meaningless (it just weights by price level).
+    total_pct = sum(r.get("total_pct", 0) for r in rows)
     total_resolved = total_tp1 + total_sl + sum(
         r.get("expired_count", 0) for r in rows
     )
@@ -41,6 +44,7 @@ async def quality(request: Request):
             "total_tp1": total_tp1,
             "total_sl": total_sl,
             "total_points": total_points,
+            "total_pct": total_pct,
             "overall_win_rate": overall_win,
             "active": "quality",
         }
