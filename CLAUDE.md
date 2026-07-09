@@ -24,13 +24,20 @@ Read-only diagnostic dashboard in Phase 1. Views:
   side / base / min-confidence / min-RR over a window and read the realised
   win-rate, net %, expectancy and profit factor, with best-first breakdowns and
   a cohort CSV download
+- **Control** — owner maintenance panel (owner-directed, Session 15): clear
+  signal history (all / today, requires typing CLEAR) and reset today's
+  in-memory gate state. Actions are executed by the engine via its
+  static-token-only `/api/admin/*` endpoints — ops still never touches engine
+  state directly. No trading controls here until Phase 2 sign-off.
 
 Date-range views work by fanning out the engine's single-date `/api/signals`
 across each day in the window (concurrent, capped at 92 days) and aggregating in
 the ops layer — no local storage, engine stays source of truth.
 
-No writes in Phase 1. Control endpoints (kill switch, auto-mode) ship when the
-engine has them and Phase 2 execution is activated with owner sign-off.
+Diagnostics are read-only; the Control view carries owner *maintenance*
+writes only (history wipe, gate reset). Trading controls (kill switch,
+auto-mode) ship when the engine has them and Phase 2 execution is activated
+with owner sign-off.
 
 ## Engine API it calls
 
@@ -41,6 +48,8 @@ All endpoints at `https://lumintrade.app` (the India engine VPS):
 - `GET /api/suppressed` — gate suppressions
 - `GET /api/outcomes` — outcomes (TP1/SL/EXPIRED)
 - `GET /api/session-summary` — 30-day quality ledger
+- `POST /api/admin/clear-history` — wipe signal history (Control view)
+- `POST /api/admin/reset-gates` — reset today's in-memory gate state
 
 ## Change-management protocol
 

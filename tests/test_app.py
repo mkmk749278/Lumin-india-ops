@@ -23,6 +23,7 @@ def test_unauthenticated_redirect():
         for path in [
             "/", "/signals", "/signals/export.csv", "/suppressed",
             "/outcomes", "/quality", "/strategy", "/strategy/export.csv",
+            "/control",
         ]:
             r = client.get(path, follow_redirects=False)
             assert r.status_code == 302, f"{path} should redirect"

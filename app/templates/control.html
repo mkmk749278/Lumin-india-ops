@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Control — Lumin India Ops{% endblock %}
+{% block content %}
+<h1>Control</h1>
+<p class="muted small">
+  Owner maintenance. Every action here is executed by the engine via its
+  admin API — irreversible actions need the CLEAR confirmation word.
+</p>
+
+{% if error %}
+<div class="error-msg">{{ error }}</div>
+{% endif %}
+
+{% if result %}
+<div class="card" style="border-color: var(--pos); margin-bottom: 1rem">
+  <strong class="pos">✓ {{ result.action }}</strong>
+  {% if result.deleted is defined %}
+  <ul class="small" style="margin: 0.5rem 0 0; padding-left: 1.2rem">
+    {% for table, n in result.deleted.items() %}
+    <li class="mono">{{ table }}: {{ n }} rows deleted</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if result.tracked_signals_dropped is defined %}
+  <div class="small muted" style="margin-top: 0.4rem">
+    In-memory state reset — {{ result.tracked_signals_dropped }} tracked
+    signal(s) dropped, gate chain cleared.
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom: 1rem">
+  <h2 style="margin-top: 0">Clear signal history</h2>
+  <p class="small muted">
+    Deletes signals, outcomes, suppressions and session summaries from the
+    engine database, and resets the live engine's gate state and trade
+    monitor. <strong>This cannot be undone</strong> — the 30-day quality
+    window restarts from zero. Use it to wipe test/broken data before a
+    clean measurement window.
+  </p>
+  <form method="post" action="/control/clear-history" class="filters" style="margin: 0">
+    <label>Scope
+      <select name="scope">
+        <option value="all">All history</option>
+        <option value="today">Today only</option>
+      </select>
+    </label>
+    <label>Type CLEAR to confirm
+      <input type="text" name="confirm" autocomplete="off" placeholder="CLEAR">
+    </label>
+    <button type="submit" class="btn-danger">Clear history</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2 style="margin-top: 0">Reset today's gates</h2>
+  <p class="small muted">
+    Clears the engine's in-memory emission state for today — caps,
+    cooldowns, direction-conflict windows, tracked signals — without
+    deleting any stored history. Stored signals are re-read at the next
+    engine restart, so this is a soft reset for the current session.
+  </p>
+  <form method="post" action="/control/reset-gates" class="filters" style="margin: 0">
+    <button type="submit" class="btn-warn">Reset gates</button>
+  </form>
+</div>
+{% endblock %}

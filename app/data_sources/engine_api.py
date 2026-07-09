@@ -126,3 +126,37 @@ class IndiaEngineApiClient:
 
     async def session_summary(self, limit: int = 30) -> Any:
         return await self._get("/api/session-summary", limit=limit)
+
+    # --- owner maintenance (Control panel) -----------------------------
+    # These call the engine's admin endpoints (static-token-only on the
+    # engine side). Ops still never touches engine state directly — the
+    # engine performs the wipe/reset and reports back what it did.
+
+    async def _post(self, path: str, payload: dict[str, Any] | None = None) -> Any:
+        try:
+            r = await self.client.post(path, json=payload or {})
+            r.raise_for_status()
+            return r.json()
+        except httpx.HTTPStatusError as exc:
+            detail: Any = None
+            try:
+                detail = exc.response.json().get("detail")
+            except Exception:
+                detail = exc.response.text[:200]
+            return {
+                "error": detail or str(exc),
+                "status_code": exc.response.status_code,
+                "endpoint": path,
+            }
+        except httpx.HTTPError as exc:
+            return {"error": str(exc), "endpoint": path}
+
+    async def admin_clear_history(self, scope: str) -> Any:
+        """Wipe signal history on the engine (scope: 'all' | 'today')."""
+        return await self._post(
+            "/api/admin/clear-history", {"scope": scope, "confirm": "CLEAR"}
+        )
+
+    async def admin_reset_gates(self) -> Any:
+        """Reset today's in-memory gate state (caps, cooldowns, windows)."""
+        return await self._post("/api/admin/reset-gates")
