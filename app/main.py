@@ -22,7 +22,15 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.auth_mw import AuthRedirectMiddleware
 from app.config import load_settings
 from app.data_sources.engine_api import IndiaEngineApiClient
-from app.routes import auth, outcomes, pulse, quality, signals, suppressed
+from app.routes import (
+    auth,
+    outcomes,
+    pulse,
+    quality,
+    signals,
+    strategy,
+    suppressed,
+)
 
 settings = load_settings()
 logging.basicConfig(
@@ -74,6 +82,7 @@ app.include_router(signals.router)
 app.include_router(suppressed.router)
 app.include_router(outcomes.router)
 app.include_router(quality.router)
+app.include_router(strategy.router)
 
 
 @app.get("/healthz")

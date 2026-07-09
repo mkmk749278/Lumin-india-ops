@@ -15,10 +15,19 @@ Before every session read in order:
 
 Read-only diagnostic dashboard in Phase 1. Views:
 - **Pulse** — engine session state, scan count, uptime
-- **Signals** — today's emitted signals with filters
+- **Signals** — emitted signals over a date range (presets + custom from/to),
+  with per-signal outcome and a full CSV download
 - **Suppressed** — gate rejection telemetry (first stop when "no signals")
 - **Outcomes** — TP1/SL/EXPIRED results, net points
 - **Quality** — 30-day session summary table
+- **Strategy** — signal-quality lab: filter resolved signals by tier / setup /
+  side / base / min-confidence / min-RR over a window and read the realised
+  win-rate, net %, expectancy and profit factor, with best-first breakdowns and
+  a cohort CSV download
+
+Date-range views work by fanning out the engine's single-date `/api/signals`
+across each day in the window (concurrent, capped at 92 days) and aggregating in
+the ops layer — no local storage, engine stays source of truth.
 
 No writes in Phase 1. Control endpoints (kill switch, auto-mode) ship when the
 engine has them and Phase 2 execution is activated with owner sign-off.

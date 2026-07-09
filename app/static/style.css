@@ -147,6 +147,36 @@ h3 { font-size: 0.9rem; margin: 0.8rem 0 0.4rem; color: var(--fg-dim); }
 }
 .filters button:hover { opacity: 0.88; }
 
+.btn-dl {
+  align-self: end;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.btn-dl:hover { text-decoration: none; border-color: var(--accent); color: var(--accent); }
+
+.preset-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+.preset-label { color: var(--fg-dim); font-size: 0.78rem; }
+.preset-row a {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--fg-dim);
+}
+.preset-row a:hover { text-decoration: none; border-color: var(--accent); color: var(--accent); }
+
 /* Login page */
 .login-wrap {
   min-height: 100vh;

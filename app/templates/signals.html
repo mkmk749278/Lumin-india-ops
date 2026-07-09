@@ -1,13 +1,23 @@
 {% extends "base.html" %}
 {% block title %}Signals — Lumin India Ops{% endblock %}
 {% block content %}
-<h1>Signals <span class="muted">({{ signals | length }})</span></h1>
+<h1>Signals <span class="muted">({{ total }})</span></h1>
 
 {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
 
+<div class="preset-row">
+  <span class="preset-label">Quick range:</span>
+  <a href="/signals?days=1">Today</a>
+  <a href="/signals?days=7">7 days</a>
+  <a href="/signals?days=30">30 days</a>
+</div>
+
 <form class="filters" method="get" action="/signals">
-  <label>Date
-    <input type="date" name="date" value="{{ date_filter }}">
+  <label>From
+    <input type="date" name="from" value="{{ from }}">
+  </label>
+  <label>To
+    <input type="date" name="to" value="{{ to }}">
   </label>
   <label>Tier
     <select name="tier">
@@ -17,7 +27,18 @@
     </select>
   </label>
   <button type="submit">Filter</button>
+  <a class="btn-dl"
+     href="/signals/export.csv?from={{ from }}&to={{ to }}&tier={{ tier_filter }}">
+    ⭳ Download CSV
+  </a>
 </form>
+
+{% if capped %}
+<div class="card muted">
+  Showing the {{ signals | length }} most recent of {{ total }} signals in this
+  window. Download the CSV for the complete set.
+</div>
+{% endif %}
 
 {% if signals %}
 <div class="table-wrap">
@@ -34,13 +55,13 @@
       <th>TP1</th>
       <th>RR</th>
       <th>Conf</th>
-      <th>Expiry</th>
+      <th>Result</th>
     </tr>
   </thead>
   <tbody>
     {% for s in signals %}
     <tr>
-      <td class="mono">{{ s.created_at[:16] if s.created_at else '—' }}</td>
+      <td class="mono small">{{ s.created_at[:16] if s.created_at else '—' }}</td>
       <td><strong>{{ s.base }}</strong></td>
       <td><span class="badge badge-{{ s.direction | lower }}">{{ s.direction }}</span></td>
       <td class="mono small">{{ s.setup_class }}</td>
@@ -52,13 +73,24 @@
       <td class="mono pos">{{ '%.1f' % s.tp1 }}</td>
       <td class="mono">{{ '%.2f' % s.rr_ratio }}</td>
       <td class="mono">{{ '%.0f' % s.confidence }}</td>
-      <td class="mono small">{{ s.expiry_date | default('—') }}</td>
+      <td>
+        {% set st = s.status | default('OPEN') %}
+        {% if st == 'TP1_HIT' %}<span class="badge badge-tp1">TP1</span>
+        {% elif st == 'SL_HIT' %}<span class="badge badge-sl">SL</span>
+        {% elif st == 'EXPIRED' %}<span class="badge badge-exp">EXP</span>
+        {% else %}<span class="badge badge-open">OPEN</span>{% endif %}
+        {% if s.result_pct is not none and st != 'OPEN' %}
+        <span class="mono small {{ 'pos' if s.result_pct >= 0 else 'neg' }}">
+          {{ '+' if s.result_pct >= 0 else '' }}{{ '%.2f' % s.result_pct }}%
+        </span>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 </div>
 {% else %}
-<div class="card muted">No signals found for the selected filters.</div>
+<div class="card muted">No signals found for the selected range.</div>
 {% endif %}
 {% endblock %}

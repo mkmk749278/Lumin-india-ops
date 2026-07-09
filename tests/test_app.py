@@ -20,7 +20,10 @@ def test_healthz_is_public():
 
 def test_unauthenticated_redirect():
     with TestClient(app) as client:
-        for path in ["/", "/signals", "/suppressed", "/outcomes", "/quality"]:
+        for path in [
+            "/", "/signals", "/signals/export.csv", "/suppressed",
+            "/outcomes", "/quality", "/strategy", "/strategy/export.csv",
+        ]:
             r = client.get(path, follow_redirects=False)
             assert r.status_code == 302, f"{path} should redirect"
             assert "/login" in r.headers["location"]

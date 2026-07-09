@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Strategy — Lumin India Ops{% endblock %}
+
+{% macro pf(s) %}{% if s.resolved == 0 %}—{% elif s.profit_factor is none %}∞{% else %}{{ '%.2f' % s.profit_factor }}{% endif %}{% endmacro %}
+
+{% macro btable(label, rows) %}
+<div class="card">
+  <h2>By {{ label }}</h2>
+  {% if rows %}
+  <div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ label }}</th>
+        <th>Resolved</th>
+        <th>Win %</th>
+        <th>Net %</th>
+        <th>Avg %</th>
+        <th>PF</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in rows %}
+      <tr>
+        <td><strong>{{ s.key }}</strong> <span class="muted">({{ s.total }})</span></td>
+        <td class="mono">{{ s.resolved }}</td>
+        <td class="mono {{ 'pos' if s.win_rate >= 50 else 'neg' }}">{{ s.win_rate }}%</td>
+        <td class="mono {{ 'pos' if s.net_pct >= 0 else 'neg' }}">{{ '+' if s.net_pct >= 0 else '' }}{{ s.net_pct }}%</td>
+        <td class="mono {{ 'pos' if s.avg_pct >= 0 else 'neg' }}">{{ s.avg_pct }}%</td>
+        <td class="mono">{{ pf(s) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="muted">No resolved signals in this cohort.</div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<h1>Strategy lab</h1>
+<p class="muted" style="margin-top:-0.5rem;margin-bottom:1rem">
+  Test what actually pays. Pick a window and a filter — the metrics below are the
+  realised outcome of exactly the signals that filter would have taken.
+  Phase 1 has no execution, so "profit" is each signal's realised % (result_pct),
+  the cross-instrument-comparable measure.
+</p>
+
+{% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+<div class="preset-row">
+  <span class="preset-label">Quick range:</span>
+  <a href="/strategy?days=7">7 days</a>
+  <a href="/strategy?days=30">30 days</a>
+  <a href="/strategy?days=90">90 days</a>
+</div>
+
+<form class="filters" method="get" action="/strategy">
+  <label>From
+    <input type="date" name="from" value="{{ from }}">
+  </label>
+  <label>To
+    <input type="date" name="to" value="{{ to }}">
+  </label>
+  <label>Tier
+    <select name="tier">
+      <option value="">All</option>
+      <option value="A+" {% if f.tier == 'A+' %}selected{% endif %}>A+</option>
+      <option value="B" {% if f.tier == 'B' %}selected{% endif %}>B</option>
+    </select>
+  </label>
+  <label>Direction
+    <select name="direction">
+      <option value="">Both</option>
+      <option value="LONG" {% if f.direction == 'LONG' %}selected{% endif %}>LONG</option>
+      <option value="SHORT" {% if f.direction == 'SHORT' %}selected{% endif %}>SHORT</option>
+    </select>
+  </label>
+  <label>Base
+    <select name="base">
+      <option value="">All</option>
+      {% for b in all_bases %}
+      <option value="{{ b }}" {% if f.base == b %}selected{% endif %}>{{ b }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Min conf
+    <input type="number" name="min_conf" min="0" max="100" step="1"
+           value="{{ f.min_conf }}" style="width:5rem">
+  </label>
+  <label>Min RR
+    <input type="number" name="min_rr" min="0" step="0.1"
+           value="{{ f.min_rr }}" style="width:5rem">
+  </label>
+  <label>Setups <span class="muted">(ctrl-click)</span>
+    <select name="setup" multiple size="4" style="min-width:14rem">
+      {% for s in all_setups %}
+      <option value="{{ s }}" {% if s in f.setups %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Analyze</button>
+  <a class="btn-dl"
+     href="/strategy/export.csv?from={{ from }}&to={{ to }}&tier={{ f.tier }}&direction={{ f.direction }}&base={{ f.base }}&min_conf={{ f.min_conf }}&min_rr={{ f.min_rr }}{% for s in f.setups %}&setup={{ s | urlencode }}{% endfor %}">
+    ⭳ Download cohort CSV
+  </a>
+</form>
+
+<div class="grid-auto" style="margin-bottom:1rem">
+  <div class="stat-card">
+    <div class="stat-label">Resolved</div>
+    <div class="stat-value">{{ summary.resolved }}<span class="muted" style="font-size:0.9rem"> / {{ summary.total }}</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Win rate</div>
+    <div class="stat-value {{ 'pos' if summary.win_rate >= 50 else 'neg' }}">{{ summary.win_rate }}%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Net %</div>
+    <div class="stat-value {{ 'pos' if summary.net_pct >= 0 else 'neg' }}">{{ '+' if summary.net_pct >= 0 else '' }}{{ summary.net_pct }}%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Expectancy / signal</div>
+    <div class="stat-value {{ 'pos' if summary.avg_pct >= 0 else 'neg' }}">{{ summary.avg_pct }}%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Profit factor</div>
+    <div class="stat-value">{{ pf(summary) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">TP1 / SL / EXP</div>
+    <div class="stat-value" style="font-size:1.2rem">
+      <span class="pos">{{ summary.tp1 }}</span> /
+      <span class="neg">{{ summary.sl }}</span> /
+      <span class="muted">{{ summary.expired }}</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Best / worst</div>
+    <div class="stat-value" style="font-size:1.2rem">
+      <span class="pos">+{{ summary.best }}%</span> /
+      <span class="neg">{{ summary.worst }}%</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Still open</div>
+    <div class="stat-value muted">{{ summary.open }}</div>
+  </div>
+</div>
+
+{{ btable('setup', by_setup) }}
+{{ btable('tier', by_tier) }}
+{{ btable('direction', by_direction) }}
+{{ btable('base', by_base) }}
+{% endblock %}

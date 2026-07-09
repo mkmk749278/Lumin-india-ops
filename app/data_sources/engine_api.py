@@ -1,6 +1,7 @@
 """Async httpx client for the Lumin India engine API at lumintrade.app."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import httpx
@@ -74,6 +75,38 @@ class IndiaEngineApiClient:
         if setup_class:
             params["setup_class"] = setup_class
         return await self._get("/api/signals", **params)
+
+    async def signals_range(
+        self,
+        days: list[str],
+        tier: str | None = None,
+        setup_class: str | None = None,
+        limit_per_day: int = 200,
+    ) -> Any:
+        """Concatenate `/api/signals` across a set of days.
+
+        The engine only filters by a single date, so a window is one call per
+        day, fanned out concurrently (owner tool, off the hot path). Returns
+        the merged row list, or the first ``{"error": ...}`` encountered.
+        """
+        results = await asyncio.gather(
+            *(
+                self.signals(
+                    date=d,
+                    tier=tier,
+                    setup_class=setup_class,
+                    limit=limit_per_day,
+                )
+                for d in days
+            )
+        )
+        rows: list[dict] = []
+        for r in results:
+            if isinstance(r, dict) and r.get("error"):
+                return r
+            if isinstance(r, list):
+                rows.extend(r)
+        return rows
 
     async def signal(self, signal_id: str) -> Any:
         return await self._get(f"/api/signals/{signal_id}")
