@@ -68,6 +68,7 @@
     <select name="tier">
       <option value="">All</option>
       <option value="A+" {% if f.tier == 'A+' %}selected{% endif %}>A+</option>
+      <option value="A" {% if f.tier == 'A' %}selected{% endif %}>A</option>
       <option value="B" {% if f.tier == 'B' %}selected{% endif %}>B</option>
     </select>
   </label>

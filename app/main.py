@@ -1,8 +1,9 @@
 """Lumin India Ops — FastAPI entrypoint.
 
 Owner-only diagnostic dashboard for the Lumin India NSE F&O signal engine.
-Single-password session auth. Read-only in Phase 1 (no control plane writes
-until the India engine has write endpoints).
+Single-password session auth. Diagnostics are read-only; the Control view
+carries owner maintenance actions (history wipe, gate reset) executed by
+the engine's admin API. Trading controls remain Phase 2.
 
 Middleware ordering: AuthRedirectMiddleware added first (innermost),
 SessionMiddleware added second (outermost) — session is populated before
@@ -24,6 +25,7 @@ from app.config import load_settings
 from app.data_sources.engine_api import IndiaEngineApiClient
 from app.routes import (
     auth,
+    control,
     outcomes,
     pulse,
     quality,
@@ -83,6 +85,7 @@ app.include_router(suppressed.router)
 app.include_router(outcomes.router)
 app.include_router(quality.router)
 app.include_router(strategy.router)
+app.include_router(control.router)
 
 
 @app.get("/healthz")

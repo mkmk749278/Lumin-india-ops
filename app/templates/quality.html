@@ -38,6 +38,7 @@
       <th>Date</th>
       <th>Signals</th>
       <th>A+</th>
+      <th>A</th>
       <th>B</th>
       <th>Avg conf</th>
       <th>TP1</th>
@@ -57,6 +58,7 @@
       <td class="mono">{{ s.date }}</td>
       <td>{{ s.signal_count }}</td>
       <td class="pos">{{ s.a_plus_count }}</td>
+      <td>{{ s.a_count | default(0) }}</td>
       <td class="warn">{{ s.b_count }}</td>
       <td class="mono">{{ '%.0f' % s.avg_confidence }}</td>
       <td class="pos">{{ s.tp1_count }}</td>
