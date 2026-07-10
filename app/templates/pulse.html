@@ -44,11 +44,31 @@
       {{ 'ENABLED' if pulse.auto_execution else 'off' }}
     </div>
   </div>
+  {# Data-feed health — the 2026-07-10 frozen-feed incident was invisible
+     here: the engine scanned a dead buffer all session while every other
+     stat looked normal. tick_age is the ground truth: seconds since the
+     last live tick reached the engine. #}
+  {% set tick_age = pulse.last_tick_age_seconds %}
+  {% set feed_up = pulse.feed_connected %}
+  <div class="stat-card">
+    <div class="stat-label">Data feed</div>
+    {% if not feed_up %}
+    <div class="stat-value neg">DOWN</div>
+    {% elif state == 'OPEN' and tick_age is not none and tick_age > 120 %}
+    <div class="stat-value neg">STALLED {{ tick_age }}s</div>
+    {% elif tick_age is none %}
+    <div class="stat-value warn">NO TICKS</div>
+    {% else %}
+    <div class="stat-value pos">LIVE</div>
+    {% endif %}
+  </div>
 </div>
 
 <div class="card">
   <h2>Engine detail</h2>
   <div class="kv"><span class="k">Allowed bases</span><span class="v mono">{{ pulse.allowed_bases | join(', ') }}</span></div>
+  <div class="kv"><span class="k">Last tick age</span><span class="v mono">{{ tick_age ~ 's' if tick_age is not none else '—' }}</span></div>
+  <div class="kv"><span class="k">Newest candle age</span><span class="v mono">{{ pulse.data_age_seconds ~ 's' if pulse.data_age_seconds is not none else '—' }}</span></div>
   <div class="kv"><span class="k">Timestamp (IST)</span><span class="v mono">{{ pulse.ts | default('—') }}</span></div>
 </div>
 
