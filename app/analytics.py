@@ -2,10 +2,16 @@
 
 A "strategy" here is just a filter over emitted signals (tier / setup / side /
 base / min-confidence / min-RR). We measure it on the signals the engine has
-already resolved (TP1_HIT / SL_HIT / EXPIRED), using the signed realised
-percent (`result_pct`) — the cross-instrument-comparable measure. Summing raw
-points across a mixed-price universe is meaningless, so points are never
-aggregated here.
+already resolved, using the signed realised percent (`result_pct`) — the
+cross-instrument-comparable measure. Summing raw points across a mixed-price
+universe is meaningless, so points are never aggregated here.
+
+Engine outcomes (two-target plan, Session 18/19): SL_HIT is the full loss;
+TP1_HIT is the legacy single-target win; TP1_BE / TP2_HIT / TP1_EXPIRED all
+banked the TP1 leg (runner stopped at break-even / reached the stretch target
+/ was still open at the close) — every TP1-banked outcome counts as a win,
+with `result_pct` already position-weighted by the engine. EXPIRED touched
+neither level.
 
 Phase 1 has no execution: "profit" is the signal's realised % had you taken it,
 not a booked P&L. This is a quality lens, not a trading ledger.
@@ -14,7 +20,9 @@ from __future__ import annotations
 
 from typing import Any
 
-RESOLVED = ("TP1_HIT", "SL_HIT", "EXPIRED")
+RESOLVED = ("TP1_HIT", "SL_HIT", "EXPIRED", "TP1_BE", "TP2_HIT", "TP1_EXPIRED")
+# Outcomes where TP1 was banked — the win set for win-rate purposes.
+WINS = ("TP1_HIT", "TP1_BE", "TP2_HIT", "TP1_EXPIRED")
 
 
 def _f(value: Any) -> float:
@@ -58,9 +66,13 @@ def summarize(rows: list[dict]) -> dict:
     """Aggregate quality metrics over a cohort of signals."""
     resolved = [r for r in rows if r.get("status") in RESOLVED]
     n = len(resolved)
+    wins = sum(1 for r in resolved if r.get("status") in WINS)
     tp1 = sum(1 for r in resolved if r.get("status") == "TP1_HIT")
     sl = sum(1 for r in resolved if r.get("status") == "SL_HIT")
     exp = sum(1 for r in resolved if r.get("status") == "EXPIRED")
+    tp1_be = sum(1 for r in resolved if r.get("status") == "TP1_BE")
+    tp2 = sum(1 for r in resolved if r.get("status") == "TP2_HIT")
+    tp1_exp = sum(1 for r in resolved if r.get("status") == "TP1_EXPIRED")
 
     pcts = [_f(r.get("result_pct")) for r in resolved]
     net = sum(pcts)
@@ -83,7 +95,11 @@ def summarize(rows: list[dict]) -> dict:
         "tp1": tp1,
         "sl": sl,
         "expired": exp,
-        "win_rate": round(tp1 / n * 100, 1) if n else 0.0,
+        "tp1_be": tp1_be,
+        "tp2": tp2,
+        "tp1_expired": tp1_exp,
+        "wins": wins,
+        "win_rate": round(wins / n * 100, 1) if n else 0.0,
         "net_pct": round(net, 2),
         "avg_pct": round(net / n, 3) if n else 0.0,
         "profit_factor": profit_factor,

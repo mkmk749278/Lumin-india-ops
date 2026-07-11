@@ -18,7 +18,10 @@ Read-only diagnostic dashboard in Phase 1. Views:
 - **Signals** — emitted signals over a date range (presets + custom from/to),
   with per-signal outcome and a full CSV download
 - **Suppressed** — gate rejection telemetry (first stop when "no signals")
-- **Outcomes** — TP1/SL/EXPIRED results, net points
+- **Outcomes** — per-signal results under the engine's two-target plan
+  (SL_HIT / TP1_HIT / TP1_BE / TP2_HIT / TP1_EXPIRED / EXPIRED), net %.
+  Every TP1-banked outcome counts as a win; `result_pct` arrives
+  position-weighted from the engine — ops does no leg math
 - **Quality** — 30-day session summary table
 - **Strategy** — signal-quality lab: filter resolved signals by tier / setup /
   side / base / min-confidence / min-RR over a window and read the realised
@@ -46,7 +49,7 @@ All endpoints at `https://lumintrade.app` (the India engine VPS):
 - `GET /api/pulse` — session state, scan count
 - `GET /api/signals` — signal list
 - `GET /api/suppressed` — gate suppressions
-- `GET /api/outcomes` — outcomes (TP1/SL/EXPIRED)
+- `GET /api/outcomes` — outcomes (two-target plan statuses)
 - `GET /api/session-summary` — 30-day quality ledger
 - `POST /api/admin/clear-history` — wipe signal history (Control view)
 - `POST /api/admin/reset-gates` — reset today's in-memory gate state

@@ -131,11 +131,20 @@
     <div class="stat-value">{{ pf(summary) }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">TP1 / SL / EXP</div>
+    <div class="stat-label">Wins / SL / EXP</div>
     <div class="stat-value" style="font-size:1.2rem">
-      <span class="pos">{{ summary.tp1 }}</span> /
+      <span class="pos">{{ summary.wins }}</span> /
       <span class="neg">{{ summary.sl }}</span> /
       <span class="muted">{{ summary.expired }}</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">TP1 / TP2 / BE / TP1-exp</div>
+    <div class="stat-value" style="font-size:1.2rem">
+      <span class="pos">{{ summary.tp1 }}</span> /
+      <span class="pos">{{ summary.tp2 }}</span> /
+      <span class="muted">{{ summary.tp1_be }}</span> /
+      <span class="muted">{{ summary.tp1_expired }}</span>
     </div>
   </div>
   <div class="stat-card">

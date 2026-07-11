@@ -77,6 +77,9 @@
       <td>
         {% set st = s.status | default('OPEN') %}
         {% if st == 'TP1_HIT' %}<span class="badge badge-tp1">TP1</span>
+        {% elif st == 'TP2_HIT' %}<span class="badge badge-tp2">TP2</span>
+        {% elif st == 'TP1_BE' %}<span class="badge badge-be">TP1&rarr;BE</span>
+        {% elif st == 'TP1_EXPIRED' %}<span class="badge badge-be">TP1&rarr;EXP</span>
         {% elif st == 'SL_HIT' %}<span class="badge badge-sl">SL</span>
         {% elif st == 'EXPIRED' %}<span class="badge badge-exp">EXP</span>
         {% else %}<span class="badge badge-open">OPEN</span>{% endif %}
