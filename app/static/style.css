@@ -121,6 +121,10 @@ h3 { font-size: 0.9rem; margin: 0.8rem 0 0.4rem; color: var(--fg-dim); }
 .badge-short { background: rgba(248,81,73,0.1); color: var(--neg); }
 .badge-tp1 { background: rgba(63,185,80,0.12); color: var(--pos); }
 .badge-sl { background: rgba(248,81,73,0.12); color: var(--neg); }
+/* Two-target plan outcomes: TP2 = full winner, TP1->BE / TP1->EXP = TP1 banked,
+   runner scratched at break-even / open at the close. */
+.badge-tp2 { background: rgba(63,185,80,0.22); color: var(--pos); }
+.badge-be { background: rgba(96,165,250,0.12); color: #60a5fa; }
 .badge-exp { background: rgba(139,148,158,0.12); color: var(--fg-dim); }
 .badge-open { background: rgba(63,185,80,0.12); color: var(--pos); }
 .badge-closed { background: rgba(139,148,158,0.12); color: var(--fg-dim); }

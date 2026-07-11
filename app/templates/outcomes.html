@@ -19,6 +19,14 @@
     <div class="stat-value pos">{{ tp1_count }}</div>
   </div>
   <div class="stat-card">
+    <div class="stat-label">TP2 / BE / TP1-exp</div>
+    <div class="stat-value" style="font-size:1.2rem">
+      <span class="pos">{{ tp2_count }}</span> /
+      <span class="muted">{{ tp1_be_count }}</span> /
+      <span class="muted">{{ tp1_expired_count }}</span>
+    </div>
+  </div>
+  <div class="stat-card">
     <div class="stat-label">SL Hit</div>
     <div class="stat-value neg">{{ sl_count }}</div>
   </div>
@@ -79,6 +87,12 @@
       <td>
         {% if o.outcome == 'TP1_HIT' %}
         <span class="badge badge-tp1">TP1</span>
+        {% elif o.outcome == 'TP2_HIT' %}
+        <span class="badge badge-tp2">TP2</span>
+        {% elif o.outcome == 'TP1_BE' %}
+        <span class="badge badge-be">TP1&rarr;BE</span>
+        {% elif o.outcome == 'TP1_EXPIRED' %}
+        <span class="badge badge-be">TP1&rarr;EXP</span>
         {% elif o.outcome == 'SL_HIT' %}
         <span class="badge badge-sl">SL</span>
         {% else %}
@@ -99,6 +113,6 @@
 </table>
 </div>
 {% else %}
-<div class="card muted">No outcomes found. Outcomes are written when a signal's TP1 or SL is touched, or at session close (EXPIRED).</div>
+<div class="card muted">No outcomes found. Outcomes are written when a signal's SL, TP1, break-even stop or TP2 is touched, or at session close (EXPIRED / TP1_EXPIRED).</div>
 {% endif %}
 {% endblock %}

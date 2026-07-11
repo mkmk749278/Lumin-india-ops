@@ -17,9 +17,19 @@ async def outcomes(
     rows = data if isinstance(data, list) else []
     error = data.get("error") if isinstance(data, dict) else None
 
+    # Two-target plan: TP1_BE / TP2_HIT / TP1_EXPIRED all banked the TP1 leg
+    # (the engine's result_pct is already position-weighted) — wins.
+    wins = sum(
+        1
+        for r in rows
+        if r.get("outcome") in ("TP1_HIT", "TP1_BE", "TP2_HIT", "TP1_EXPIRED")
+    )
     tp1 = sum(1 for r in rows if r.get("outcome") == "TP1_HIT")
     sl = sum(1 for r in rows if r.get("outcome") == "SL_HIT")
     expired = sum(1 for r in rows if r.get("outcome") == "EXPIRED")
+    tp1_be = sum(1 for r in rows if r.get("outcome") == "TP1_BE")
+    tp2 = sum(1 for r in rows if r.get("outcome") == "TP2_HIT")
+    tp1_expired = sum(1 for r in rows if r.get("outcome") == "TP1_EXPIRED")
     net_points = sum(r.get("points", 0) for r in rows)
     # % is the only cross-instrument-comparable measure — summing raw points
     # across the 46-base universe just weights by price level.
@@ -33,10 +43,13 @@ async def outcomes(
             "tp1_count": tp1,
             "sl_count": sl,
             "expired_count": expired,
+            "tp1_be_count": tp1_be,
+            "tp2_count": tp2,
+            "tp1_expired_count": tp1_expired,
             "net_points": net_points,
             "net_pct": net_pct,
             "avg_pct": avg_pct,
-            "win_rate": round(tp1 / len(rows) * 100, 1) if rows else 0,
+            "win_rate": round(wins / len(rows) * 100, 1) if rows else 0,
             "date_filter": date or "",
             "active": "outcomes",
         }

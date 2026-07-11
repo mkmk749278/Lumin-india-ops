@@ -30,6 +30,24 @@ def test_summarize_counts_and_pct():
     assert s["profit_factor"] == 2.3  # (1.5+0.8)/1.0
 
 
+def test_summarize_two_target_outcomes_count_as_wins():
+    # Engine two-target plan (Session 19): TP1_BE / TP2_HIT / TP1_EXPIRED all
+    # banked the TP1 leg — wins; result_pct arrives position-weighted.
+    rows = [
+        {"status": "TP2_HIT", "result_pct": 0.61},
+        {"status": "TP1_BE", "result_pct": 0.23},
+        {"status": "TP1_EXPIRED", "result_pct": 0.31},
+        {"status": "SL_HIT", "result_pct": -0.20},
+        {"status": "OPEN", "result_pct": None},
+    ]
+    s = analytics.summarize(rows)
+    assert s["resolved"] == 4
+    assert s["wins"] == 3
+    assert s["tp2"] == 1 and s["tp1_be"] == 1 and s["tp1_expired"] == 1
+    assert s["win_rate"] == 75.0
+    assert s["net_pct"] == 0.95
+
+
 def test_profit_factor_all_wins_is_infinite():
     wins_only = [r for r in _ROWS if r["status"] == "TP1_HIT"]
     assert analytics.summarize(wins_only)["profit_factor"] is None
