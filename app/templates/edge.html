@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Edge Matrix — Lumin India Ops{% endblock %}
+{% block content %}
+<h1>Strategy × Context edge matrix
+  <span class="muted">(last {{ days }} days · {{ sample }} resolved)</span>
+</h1>
+<p class="muted small">
+  Engine-computed realised edge per market-context cohort. Win = any TP1-banked
+  outcome. <strong>EV</strong> = mean realised % minus the {{ '%.2f' % cost_pct }}%
+  round-trip cost model — a cohort is only really paying when EV &gt; 0.
+  <span class="muted">Windows:</span>
+  <a href="/edge?days=7">7d</a> ·
+  <a href="/edge?days=30">30d</a> ·
+  <a href="/edge?days=60">60d</a>
+</p>
+
+{% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+{% if sample and overall %}
+<div class="grid-auto" style="margin-bottom:1rem">
+  <div class="stat-card">
+    <div class="stat-label">Resolved</div>
+    <div class="stat-value">{{ overall.n }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Win rate</div>
+    <div class="stat-value {% if overall.win_rate >= 50 %}pos{% else %}neg{% endif %}">
+      {{ overall.win_rate }}%
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Net %</div>
+    <div class="stat-value {% if overall.net_pct >= 0 %}pos{% else %}neg{% endif %}">
+      {{ '+' if overall.net_pct >= 0 else '' }}{{ '%.2f' % overall.net_pct }}%
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Expectancy / trade</div>
+    <div class="stat-value {% if overall.ev_net_pct >= 0 %}pos{% else %}neg{% endif %}">
+      {{ '+' if overall.ev_net_pct >= 0 else '' }}{{ '%.3f' % overall.ev_net_pct }}%
+    </div>
+  </div>
+</div>
+
+{% for label, cells in dimensions %}
+<h2 class="small" style="margin:1.2rem 0 .4rem">{{ label }}</h2>
+<div class="table-wrap">
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>{{ label }}</th>
+      <th>n</th>
+      <th>Win</th>
+      <th>SL</th>
+      <th>Exp</th>
+      <th>Win %</th>
+      <th>Net %</th>
+      <th>Avg %</th>
+      <th>EV / trade</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in cells %}
+    <tr>
+      <td class="mono">{{ c.key }}</td>
+      <td class="muted">{{ c.n }}</td>
+      <td class="pos">{{ c.wins }}</td>
+      <td class="neg">{{ c.losses }}</td>
+      <td class="muted">{{ c.expired }}</td>
+      <td class="{% if c.win_rate >= 50 %}pos{% else %}neg{% endif %}">{{ c.win_rate }}%</td>
+      <td class="mono {% if c.net_pct >= 0 %}pos{% else %}neg{% endif %}">
+        {{ '+' if c.net_pct >= 0 else '' }}{{ '%.2f' % c.net_pct }}%
+      </td>
+      <td class="mono muted">{{ '+' if c.avg_pct >= 0 else '' }}{{ '%.3f' % c.avg_pct }}%</td>
+      <td class="mono {% if c.ev_net_pct >= 0 %}pos{% else %}neg{% endif %}">
+        {{ '+' if c.ev_net_pct >= 0 else '' }}{{ '%.3f' % c.ev_net_pct }}%
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endfor %}
+{% elif not error %}
+<div class="card muted">
+  No resolved signals in this window yet. The matrix fills as the engine
+  resolves signals to TP1/SL/EXPIRED over the session.
+</div>
+{% endif %}
+{% endblock %}

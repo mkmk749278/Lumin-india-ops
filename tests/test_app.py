@@ -23,7 +23,7 @@ def test_unauthenticated_redirect():
         for path in [
             "/", "/signals", "/signals/export.csv", "/suppressed",
             "/outcomes", "/quality", "/strategy", "/strategy/export.csv",
-            "/control",
+            "/edge", "/control",
         ]:
             r = client.get(path, follow_redirects=False)
             assert r.status_code == 302, f"{path} should redirect"
@@ -79,6 +79,26 @@ class _FakeEngineApi:
             "total_points": 3657.4, "total_pct": 0.49, "avg_pct": 0.03,
         }]
 
+    async def edge_matrix(self, days=30):
+        return {
+            "days": days, "sample": 4, "cost_pct": 0.06,
+            "matrix": {
+                "overall": [{
+                    "key": "ALL", "n": 4, "wins": 2, "losses": 2, "expired": 0,
+                    "win_rate": 50.0, "net_pct": 0.4, "avg_pct": 0.1,
+                    "ev_net_pct": 0.04,
+                }],
+                "by_market_vs_signal": [
+                    {"key": "LONG_BIASED/LONG", "n": 2, "wins": 2, "losses": 0,
+                     "expired": 0, "win_rate": 100.0, "net_pct": 0.8,
+                     "avg_pct": 0.4, "ev_net_pct": 0.34},
+                    {"key": "LONG_BIASED/SHORT", "n": 2, "wins": 0, "losses": 2,
+                     "expired": 0, "win_rate": 0.0, "net_pct": -0.4,
+                     "avg_pct": -0.2, "ev_net_pct": -0.26},
+                ],
+            },
+        }
+
 
 def test_outcomes_view_shows_percent_not_summed_points():
     with TestClient(app) as client:
@@ -103,3 +123,16 @@ def test_quality_view_shows_percent_pl():
         assert r.status_code == 200
         assert "+0.49%" in r.text
         assert "Net P&amp;L" in r.text
+
+
+def test_edge_view_renders_matrix_cohorts():
+    with TestClient(app) as client:
+        client.post("/login", data={"password": "test-token"})
+        app.state.engine_api = _FakeEngineApi()
+        r = client.get("/edge")
+        assert r.status_code == 200
+        # The counter-trend cohort and the with-trend cohort both surface.
+        assert "LONG_BIASED/SHORT" in r.text
+        assert "LONG_BIASED/LONG" in r.text
+        # Cost-adjusted expectancy is rendered.
+        assert "Expectancy" in r.text
