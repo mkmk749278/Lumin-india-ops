@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Allocator — Lumin India Ops{% endblock %}
+{% block content %}
+{% set badge = {'EMIT':'pos','SUPPRESS':'neg','HOLD':'warn','INSUFFICIENT_DATA':'muted'} %}
+<h1>Allocator
+  <span class="muted">(last {{ days }} days · {{ sample }} resolved)</span>
+</h1>
+<div class="card warn small" style="margin-bottom:.8rem">
+  <strong>{{ mode | upper }} MODE — observe-only.</strong>
+  These are the verdicts the allocator <em>would</em> apply from measured edge;
+  they change nothing the engine emits. A cohort is judged only after
+  {{ thresholds.min_sample | default('—') }} resolved trades; EMIT at expectancy
+  ≥ {{ '%.3f' % (thresholds.ev_floor | default(0)) }}%, SUPPRESS ≤
+  {{ '%.3f' % (thresholds.suppress_ev | default(0)) }}%.
+  <span class="muted">Windows:</span>
+  <a href="/allocator?days=7">7d</a> · <a href="/allocator?days=30">30d</a> ·
+  <a href="/allocator?days=60">60d</a>
+</div>
+
+{% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+{% if sample and dimensions %}
+<div class="grid-auto" style="margin-bottom:1rem">
+  <div class="stat-card"><div class="stat-label">EMIT</div>
+    <div class="stat-value pos">{{ tally.EMIT | default(0) }}</div></div>
+  <div class="stat-card"><div class="stat-label">SUPPRESS</div>
+    <div class="stat-value neg">{{ tally.SUPPRESS | default(0) }}</div></div>
+  <div class="stat-card"><div class="stat-label">HOLD</div>
+    <div class="stat-value warn">{{ tally.HOLD | default(0) }}</div></div>
+  <div class="stat-card"><div class="stat-label">Insufficient data</div>
+    <div class="stat-value muted">{{ tally.INSUFFICIENT_DATA | default(0) }}</div></div>
+</div>
+
+{% for label, cells in dimensions %}
+<h2 class="small" style="margin:1.2rem 0 .4rem">{{ label }}</h2>
+<div class="table-wrap">
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>{{ label }}</th>
+      <th>Verdict</th>
+      <th>n</th>
+      <th>Win %</th>
+      <th>EV / trade</th>
+      <th>Reason</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in cells %}
+    <tr>
+      <td class="mono">{{ c.key }}</td>
+      <td class="{{ badge.get(c.verdict, 'muted') }} mono">{{ c.verdict }}</td>
+      <td class="muted">{{ c.n }}</td>
+      <td class="{% if c.win_rate >= 50 %}pos{% else %}neg{% endif %}">{{ c.win_rate }}%</td>
+      <td class="mono {% if c.ev_net_pct >= 0 %}pos{% else %}neg{% endif %}">
+        {{ '+' if c.ev_net_pct >= 0 else '' }}{{ '%.3f' % c.ev_net_pct }}%
+      </td>
+      <td class="muted small">{{ c.reason }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endfor %}
+{% elif not error %}
+<div class="card muted">
+  No resolved signals in this window yet. The allocator's verdicts appear once
+  cohorts accumulate enough resolved trades to judge.
+</div>
+{% endif %}
+{% endblock %}

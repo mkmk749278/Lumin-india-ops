@@ -23,7 +23,7 @@ def test_unauthenticated_redirect():
         for path in [
             "/", "/signals", "/signals/export.csv", "/suppressed",
             "/outcomes", "/quality", "/strategy", "/strategy/export.csv",
-            "/edge", "/control",
+            "/edge", "/allocator", "/control",
         ]:
             r = client.get(path, follow_redirects=False)
             assert r.status_code == 302, f"{path} should redirect"
@@ -78,6 +78,25 @@ class _FakeEngineApi:
             "gates_fired": "{}", "tp1_count": 8, "sl_count": 3, "expired_count": 5,
             "total_points": 3657.4, "total_pct": 0.49, "avg_pct": 0.03,
         }]
+
+    async def allocator(self, days=30):
+        return {
+            "mode": "recommendation", "days": days, "sample": 40,
+            "thresholds": {"min_sample": 20, "ev_floor": 0.0, "suppress_ev": -0.05},
+            "allocation": {
+                "tally": {"EMIT": 1, "SUPPRESS": 1},
+                "recommendations": {
+                    "by_market_vs_signal": [
+                        {"key": "LONG_BIASED/LONG", "verdict": "EMIT", "n": 20,
+                         "win_rate": 56.0, "ev_net_pct": 0.34,
+                         "reason": "expectancy +0.340% ≥ floor"},
+                        {"key": "LONG_BIASED/SHORT", "verdict": "SUPPRESS", "n": 20,
+                         "win_rate": 13.0, "ev_net_pct": -0.26,
+                         "reason": "expectancy -0.260% ≤ -0.050%"},
+                    ],
+                },
+            },
+        }
 
     async def edge_matrix(self, days=30):
         return {
@@ -136,3 +155,15 @@ def test_edge_view_renders_matrix_cohorts():
         assert "LONG_BIASED/LONG" in r.text
         # Cost-adjusted expectancy is rendered.
         assert "Expectancy" in r.text
+
+
+def test_allocator_view_shows_verdicts_and_observe_only_banner():
+    with TestClient(app) as client:
+        client.post("/login", data={"password": "test-token"})
+        app.state.engine_api = _FakeEngineApi()
+        r = client.get("/allocator")
+        assert r.status_code == 200
+        assert "EMIT" in r.text and "SUPPRESS" in r.text
+        assert "LONG_BIASED/SHORT" in r.text
+        # The observe-only guardrail must be visible.
+        assert "observe-only" in r.text.lower()

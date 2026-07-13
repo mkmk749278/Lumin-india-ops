@@ -26,6 +26,10 @@ Read-only diagnostic dashboard in Phase 1. Views:
   realised win% / net% / cost-adjusted expectancy per setup, tier, session
   phase, VIX regime, and market-direction-vs-signal cohort. Read-only view of
   measured edge (the surface the tier recalibration + allocator read)
+- **Allocator** — the engine's observe-only strategy recommendations
+  (`/api/allocator`): per-cohort EMIT / SUPPRESS / HOLD / INSUFFICIENT_DATA
+  verdicts from measured edge. Recommendation mode — shows "what it would do",
+  changes nothing the engine emits
 - **Quality** — 30-day session summary table
 - **Strategy** — signal-quality lab: filter resolved signals by tier / setup /
   side / base / min-confidence / min-RR over a window and read the realised
