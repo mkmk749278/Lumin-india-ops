@@ -127,6 +127,12 @@ class IndiaEngineApiClient:
     async def session_summary(self, limit: int = 30) -> Any:
         return await self._get("/api/session-summary", limit=limit)
 
+    async def edge_matrix(self, days: int = 30) -> Any:
+        """Strategy×Context edge matrix — realised win% / net% / cost-adjusted
+        expectancy per setup, tier, session phase, VIX regime, and
+        market-direction-vs-signal cohort (engine-computed)."""
+        return await self._get("/api/edge-matrix", days=days)
+
     # --- owner maintenance (Control panel) -----------------------------
     # These call the engine's admin endpoints (static-token-only on the
     # engine side). Ops still never touches engine state directly — the

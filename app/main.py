@@ -26,6 +26,7 @@ from app.data_sources.engine_api import IndiaEngineApiClient
 from app.routes import (
     auth,
     control,
+    edge,
     outcomes,
     pulse,
     quality,
@@ -85,6 +86,7 @@ app.include_router(suppressed.router)
 app.include_router(outcomes.router)
 app.include_router(quality.router)
 app.include_router(strategy.router)
+app.include_router(edge.router)
 app.include_router(control.router)
 
 

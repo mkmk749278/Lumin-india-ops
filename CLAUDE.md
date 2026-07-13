@@ -22,6 +22,10 @@ Read-only diagnostic dashboard in Phase 1. Views:
   (SL_HIT / TP1_HIT / TP1_BE / TP2_HIT / TP1_EXPIRED / EXPIRED), net %.
   Every TP1-banked outcome counts as a win; `result_pct` arrives
   position-weighted from the engine — ops does no leg math
+- **Edge** — the engine's Strategy×Context edge matrix (`/api/edge-matrix`):
+  realised win% / net% / cost-adjusted expectancy per setup, tier, session
+  phase, VIX regime, and market-direction-vs-signal cohort. Read-only view of
+  measured edge (the surface the tier recalibration + allocator read)
 - **Quality** — 30-day session summary table
 - **Strategy** — signal-quality lab: filter resolved signals by tier / setup /
   side / base / min-confidence / min-RR over a window and read the realised
