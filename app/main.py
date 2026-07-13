@@ -24,6 +24,7 @@ from app.auth_mw import AuthRedirectMiddleware
 from app.config import load_settings
 from app.data_sources.engine_api import IndiaEngineApiClient
 from app.routes import (
+    allocator,
     auth,
     control,
     edge,
@@ -87,6 +88,7 @@ app.include_router(outcomes.router)
 app.include_router(quality.router)
 app.include_router(strategy.router)
 app.include_router(edge.router)
+app.include_router(allocator.router)
 app.include_router(control.router)
 
 

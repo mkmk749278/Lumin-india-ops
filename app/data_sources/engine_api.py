@@ -133,6 +133,11 @@ class IndiaEngineApiClient:
         market-direction-vs-signal cohort (engine-computed)."""
         return await self._get("/api/edge-matrix", days=days)
 
+    async def allocator(self, days: int = 30) -> Any:
+        """Allocator recommendations (observe-only) — per-cohort EMIT /
+        SUPPRESS / HOLD / INSUFFICIENT_DATA verdicts from the measured edge."""
+        return await self._get("/api/allocator", days=days)
+
     # --- owner maintenance (Control panel) -----------------------------
     # These call the engine's admin endpoints (static-token-only on the
     # engine side). Ops still never touches engine state directly — the
