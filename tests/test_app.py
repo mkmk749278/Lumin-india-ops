@@ -144,6 +144,34 @@ def test_quality_view_shows_percent_pl():
         assert "Net P&amp;L" in r.text
 
 
+class _BankedWinsEngineApi(_FakeEngineApi):
+    """A day whose wins all ran to TP2 / trailed to BE / expired past TP1 —
+    zero literal TP1_HIT. Reproduces the 2026-07-14 '0% win' display bug."""
+
+    async def session_summary(self, limit=30):
+        return [{
+            "date": "2026-07-14", "signal_count": 54, "a_plus_count": 5,
+            "a_count": 36, "b_count": 13, "avg_confidence": 69.0,
+            "total_suppressed": 0, "gates_fired": "{}",
+            "tp1_count": 0, "sl_count": 34, "expired_count": 6,
+            "tp1_be_count": 3, "tp2_count": 4, "tp1_expired_count": 7,
+            "total_points": 0.0, "total_pct": -0.60, "avg_pct": -0.01,
+        }]
+
+
+def test_quality_counts_all_tp1_banked_outcomes_as_wins():
+    with TestClient(app) as client:
+        client.post("/login", data={"password": "test-token"})
+        app.state.engine_api = _BankedWinsEngineApi()
+        r = client.get("/quality")
+        assert r.status_code == 200
+        # 14 banked wins / 54 resolved = 25.9%, NOT 0% (literal TP1_HIT count).
+        assert "25.9%" in r.text
+        assert "0.0%" not in r.text
+        # Real net P&L is unaffected by the win-count fix.
+        assert "-0.60%" in r.text
+
+
 def test_edge_view_renders_matrix_cohorts():
     with TestClient(app) as client:
         client.post("/login", data={"password": "test-token"})

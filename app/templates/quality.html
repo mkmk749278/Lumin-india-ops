@@ -12,8 +12,8 @@
     <div class="stat-value">{{ total_signals }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">TP1</div>
-    <div class="stat-value pos">{{ total_tp1 }}</div>
+    <div class="stat-label">Wins (TP1-banked)</div>
+    <div class="stat-value pos">{{ total_wins }}</div>
   </div>
   <div class="stat-card">
     <div class="stat-label">SL</div>
@@ -41,7 +41,7 @@
       <th>A</th>
       <th>B</th>
       <th>Avg conf</th>
-      <th>TP1</th>
+      <th>Wins</th>
       <th>SL</th>
       <th>Exp</th>
       <th>Win %</th>
@@ -52,8 +52,10 @@
   </thead>
   <tbody>
     {% for s in summaries %}
-    {% set resolved = s.tp1_count + s.sl_count + s.expired_count %}
-    {% set win = (s.tp1_count / resolved * 100) | round(1) if resolved > 0 else none %}
+    {# Win = every TP1-banked outcome, not just literal TP1_HIT. #}
+    {% set wins = (s.tp1_count | default(0)) + (s.tp2_count | default(0)) + (s.tp1_be_count | default(0)) + (s.tp1_expired_count | default(0)) %}
+    {% set resolved = wins + (s.sl_count | default(0)) + (s.expired_count | default(0)) %}
+    {% set win = (wins / resolved * 100) | round(1) if resolved > 0 else none %}
     <tr>
       <td class="mono">{{ s.date }}</td>
       <td>{{ s.signal_count }}</td>
@@ -61,7 +63,7 @@
       <td>{{ s.a_count | default(0) }}</td>
       <td class="warn">{{ s.b_count }}</td>
       <td class="mono">{{ '%.0f' % s.avg_confidence }}</td>
-      <td class="pos">{{ s.tp1_count }}</td>
+      <td class="pos">{{ wins }}</td>
       <td class="neg">{{ s.sl_count }}</td>
       <td class="muted">{{ s.expired_count }}</td>
       <td class="{% if win is not none %}{% if win >= 50 %}pos{% else %}neg{% endif %}{% else %}muted{% endif %}">
