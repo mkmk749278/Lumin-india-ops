@@ -44,6 +44,7 @@
       <th>Wins</th>
       <th>SL</th>
       <th>Exp</th>
+      <th title="LEVEL entries never filled — excluded from Win %">NT</th>
       <th>Win %</th>
       <th>Net P&amp;L %</th>
       <th>Suppressed</th>
@@ -66,6 +67,7 @@
       <td class="pos">{{ wins }}</td>
       <td class="neg">{{ s.sl_count }}</td>
       <td class="muted">{{ s.expired_count }}</td>
+      <td class="muted">{{ s.not_triggered_count | default(0) }}</td>
       <td class="{% if win is not none %}{% if win >= 50 %}pos{% else %}neg{% endif %}{% else %}muted{% endif %}">
         {% if win is not none %}{{ win }}%{% else %}—{% endif %}
       </td>

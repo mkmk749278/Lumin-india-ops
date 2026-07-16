@@ -21,6 +21,11 @@ _DIMENSIONS: list[tuple[str, str]] = [
     ("by_tier", "Confidence tier"),
     ("by_session_phase", "Session phase"),
     ("by_vix_regime", "VIX regime"),
+    # Truth-telemetry dimensions (Session 21): exhaustion at entry and
+    # duplicate ordinal — the evidence surfaces for the (owner-gated)
+    # exhaustion gate and duplicate policy.
+    ("by_extension_bucket", "Extension at entry (VWAP, ATRs)"),
+    ("by_dup_index", "Duplicate ordinal (per base+direction day)"),
 ]
 
 
@@ -49,6 +54,12 @@ async def edge(
             "cost_pct": data.get("cost_pct", 0.0) if isinstance(data, dict) else 0.0,
             "overall": overall,
             "dimensions": dimensions,
+            # Rows predating the context/telemetry migrations are excluded
+            # from context dimensions (never lumped into a mixed '?' cohort);
+            # the per-dimension exclusion count keeps that shrink visible.
+            "context_excluded": matrix.get("context_excluded", {})
+            if isinstance(matrix, dict)
+            else {},
             "active": "edge",
         }
     )
