@@ -17,24 +17,36 @@ async def outcomes(
     rows = data if isinstance(data, list) else []
     error = data.get("error") if isinstance(data, dict) else None
 
+    # NOT_TRIGGERED = a LEVEL entry that never filled (entry-trigger plan,
+    # Session 21): no trade happened, so it is excluded from every win/EV
+    # denominator and shown as its own count.
+    not_triggered = sum(
+        1 for r in rows if r.get("outcome") == "NOT_TRIGGERED"
+    )
+    filled = [r for r in rows if r.get("outcome") != "NOT_TRIGGERED"]
+
     # Two-target plan: TP1_BE / TP2_HIT / TP1_EXPIRED all banked the TP1 leg
     # (the engine's result_pct is already position-weighted) — wins.
     wins = sum(
         1
-        for r in rows
+        for r in filled
         if r.get("outcome") in ("TP1_HIT", "TP1_BE", "TP2_HIT", "TP1_EXPIRED")
     )
-    tp1 = sum(1 for r in rows if r.get("outcome") == "TP1_HIT")
-    sl = sum(1 for r in rows if r.get("outcome") == "SL_HIT")
-    expired = sum(1 for r in rows if r.get("outcome") == "EXPIRED")
-    tp1_be = sum(1 for r in rows if r.get("outcome") == "TP1_BE")
-    tp2 = sum(1 for r in rows if r.get("outcome") == "TP2_HIT")
-    tp1_expired = sum(1 for r in rows if r.get("outcome") == "TP1_EXPIRED")
-    net_points = sum(r.get("points", 0) for r in rows)
+    tp1 = sum(1 for r in filled if r.get("outcome") == "TP1_HIT")
+    sl = sum(1 for r in filled if r.get("outcome") == "SL_HIT")
+    expired = sum(1 for r in filled if r.get("outcome") == "EXPIRED")
+    tp1_be = sum(1 for r in filled if r.get("outcome") == "TP1_BE")
+    tp2 = sum(1 for r in filled if r.get("outcome") == "TP2_HIT")
+    tp1_expired = sum(1 for r in filled if r.get("outcome") == "TP1_EXPIRED")
+    # Ledger-resolution health: how many outcomes still resolved on a 5m
+    # walk with an ambiguous both-levels candle (the artifact the 1m walk
+    # exists to remove).
+    ambiguous = sum(1 for r in filled if r.get("ambiguous_tie"))
+    net_points = sum(r.get("points", 0) for r in filled)
     # % is the only cross-instrument-comparable measure — summing raw points
     # across the 46-base universe just weights by price level.
-    net_pct = sum(r.get("pct", 0) for r in rows)
-    avg_pct = round(net_pct / len(rows), 2) if rows else 0
+    net_pct = sum(r.get("pct", 0) for r in filled)
+    avg_pct = round(net_pct / len(filled), 2) if filled else 0
 
     return request.app.state.templates.TemplateResponse(
         request, "outcomes.html", {
@@ -49,7 +61,9 @@ async def outcomes(
             "net_points": net_points,
             "net_pct": net_pct,
             "avg_pct": avg_pct,
-            "win_rate": round(wins / len(rows) * 100, 1) if rows else 0,
+            "win_rate": round(wins / len(filled) * 100, 1) if filled else 0,
+            "not_triggered_count": not_triggered,
+            "ambiguous_count": ambiguous,
             "date_filter": date or "",
             "active": "outcomes",
         }

@@ -53,7 +53,10 @@
       <th>Win</th>
       <th>SL</th>
       <th>Exp</th>
+      <th title="LEVEL entries never filled — excluded from n">NT</th>
+      <th title="Legacy single-target rows inside n (not comparable to two-target blends)">Leg</th>
       <th>Win %</th>
+      <th title="% of trades whose realised pct beat the round-trip cost">Net-win %</th>
       <th>Net %</th>
       <th>Avg %</th>
       <th>EV / trade</th>
@@ -67,7 +70,10 @@
       <td class="pos">{{ c.wins }}</td>
       <td class="neg">{{ c.losses }}</td>
       <td class="muted">{{ c.expired }}</td>
+      <td class="muted">{{ c.not_triggered | default(0) }}</td>
+      <td class="muted">{{ c.legacy_n | default(0) }}</td>
       <td class="{% if c.win_rate >= 50 %}pos{% else %}neg{% endif %}">{{ c.win_rate }}%</td>
+      <td class="{% if (c.win_rate_net | default(0)) >= 50 %}pos{% else %}muted{% endif %}">{{ c.win_rate_net | default('—') }}{% if c.win_rate_net is defined %}%{% endif %}</td>
       <td class="mono {% if c.net_pct >= 0 %}pos{% else %}neg{% endif %}">
         {{ '+' if c.net_pct >= 0 else '' }}{{ '%.2f' % c.net_pct }}%
       </td>
@@ -81,6 +87,14 @@
 </table>
 </div>
 {% endfor %}
+
+{% if context_excluded %}
+<p class="muted small" style="margin-top:.8rem">
+  Context dimensions exclude rows that predate the context/telemetry stamp
+  (never lumped into a mixed “?” cohort):
+  {% for dim, n in context_excluded.items() %}{% if n %}{{ dim }}: {{ n }}{% if not loop.last %} · {% endif %}{% endif %}{% endfor %}
+</p>
+{% endif %}
 {% elif not error %}
 <div class="card muted">
   No resolved signals in this window yet. The matrix fills as the engine

@@ -35,6 +35,14 @@
     <div class="stat-value muted">{{ expired_count }}</div>
   </div>
   <div class="stat-card">
+    <div class="stat-label" title="LEVEL entries never filled — no trade, excluded from win rate">Not triggered</div>
+    <div class="stat-value muted">{{ not_triggered_count | default(0) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label" title="Outcomes whose resolving candle spanned both SL and TP (5m-walk artifact the 1m walk removes)">Ambiguous ties</div>
+    <div class="stat-value {% if ambiguous_count %}neg{% else %}muted{% endif %}">{{ ambiguous_count | default(0) }}</div>
+  </div>
+  <div class="stat-card">
     <div class="stat-label">Win rate</div>
     <div class="stat-value {% if win_rate >= 50 %}pos{% else %}neg{% endif %}">{{ win_rate }}%</div>
   </div>
@@ -66,6 +74,8 @@
       <th>Exit</th>
       <th>P&amp;L %</th>
       <th>Points</th>
+      <th title="Max favourable / adverse excursion, % of entry">MFE/MAE</th>
+      <th title="Timeframe that resolved the outcome">Res</th>
     </tr>
   </thead>
   <tbody>
@@ -95,6 +105,8 @@
         <span class="badge badge-be">TP1&rarr;EXP</span>
         {% elif o.outcome == 'SL_HIT' %}
         <span class="badge badge-sl">SL</span>
+        {% elif o.outcome == 'NOT_TRIGGERED' %}
+        <span class="badge badge-exp" title="LEVEL entry never filled — no trade">NT</span>
         {% else %}
         <span class="badge badge-exp">EXP</span>
         {% endif %}
@@ -106,6 +118,14 @@
       </td>
       <td class="mono small muted">
         {{ '+' if o.points >= 0 else '' }}{{ '%.1f' % o.points }}
+      </td>
+      <td class="mono small muted" title="MFE / MAE (post-fill favourable / adverse excursion, % of entry)">
+        {% if o.mfe_pct is defined and o.mfe_pct is not none %}
+        {{ '%.2f' % o.mfe_pct }} / {{ '%.2f' % (o.mae_pct | default(0)) }}
+        {% else %}—{% endif %}
+      </td>
+      <td class="mono small muted">
+        {{ o.resolution_tf | default('') }}{% if o.ambiguous_tie %} <span class="neg" title="resolving candle spanned both levels">±</span>{% endif %}
       </td>
     </tr>
     {% endfor %}

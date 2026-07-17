@@ -72,6 +72,28 @@
   <div class="kv"><span class="k">Timestamp (IST)</span><span class="v mono">{{ pulse.ts | default('—') }}</span></div>
 </div>
 
+{% if pulse.evaluator_errors %}
+<div class="card">
+  <h2>Evaluator errors <span class="muted small">(exceptions swallowed today — a raising evaluator is silently absent from scans)</span></h2>
+  {% for setup, count in pulse.evaluator_errors.items() %}
+  <div class="kv"><span class="k mono">{{ setup }}</span><span class="v neg">{{ count }}</span></div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if pulse.macro is defined and pulse.macro %}
+<div class="card">
+  <h2>Macro (prev-day FII/DII)</h2>
+  {% if pulse.macro.available %}
+  <div class="kv"><span class="k">FII net</span><span class="v mono {% if (pulse.macro.fii_net_cr or 0) >= 0 %}pos{% else %}neg{% endif %}">{{ '%.0f' % (pulse.macro.fii_net_cr or 0) }} cr</span></div>
+  <div class="kv"><span class="k">DII net</span><span class="v mono {% if (pulse.macro.dii_net_cr or 0) >= 0 %}pos{% else %}neg{% endif %}">{{ '%.0f' % (pulse.macro.dii_net_cr or 0) }} cr</span></div>
+  <div class="kv"><span class="k">As of</span><span class="v mono">{{ pulse.macro.as_of | default('—') }}</span></div>
+  {% else %}
+  <div class="kv"><span class="k">Status</span><span class="v warn">UNAVAILABLE — direction classifier's macro vote is NEUTRAL (set INDIA_FII_DII_URL)</span></div>
+  {% endif %}
+</div>
+{% endif %}
+
 {% if health and not health.error is defined %}
 <div class="card">
   <h2>Health</h2>
